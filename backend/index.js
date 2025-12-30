@@ -8,6 +8,15 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// Homepage - confirmă că serverul rulează
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'online',
+    message: '🇷🇴 RoLexAI Backend is running!',
+    endpoints: ['/api/chat', '/api/upload', '/api/legisro', '/api/nlex']
+  });
+});
+
 // Upload documente
 const uploadRouter = require('./upload');
 app.use('/api/upload', uploadRouter);
