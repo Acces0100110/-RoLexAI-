@@ -338,11 +338,11 @@
     <script>
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
             ? 'http://localhost:5001/api/chat'
-            : `http://${window.location.hostname}:5001/api/chat`;
+            : 'https://rolexai.onrender.com/api/chat';
         
         const UPLOAD_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
             ? 'http://localhost:5001/api/upload'
-            : `http://${window.location.hostname}:5001/api/upload`;
+            : 'https://rolexai.onrender.com/api/upload';
         
         let selectedFile = null;
         
