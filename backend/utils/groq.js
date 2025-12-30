@@ -3,7 +3,7 @@
 const axios = require('axios');
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
 
 async function chatWithGroq(messages) {
   try {
