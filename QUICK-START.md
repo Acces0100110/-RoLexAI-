@@ -96,18 +96,23 @@ git push -u origin main
 ```
 🚀 LANSEZ ROLEXAI - BETA! 🇷🇴
 
-AI legal assistant specializat în legislația din România!
+AI-ul care te ajută să înțelegi orice lege din România!
 
-✅ Chat cu AI despre legi românești
-✅ Upload documente (OCR + analiză)
-✅ Răspunsuri cu articole exacte
+✅ Întreabă despre legi, contracte, acte juridice
+✅ Upload & analiză documente (OCR inteligent)
+✅ Răspunsuri cu articole exacte din Codul Penal/Civil
+✅ Instalabil pe telefon (PWA)
 
-📱 Testează ACUM (instalabil pe telefon):
+⚠️ Versiune BETA: Prima încărcare ~30-60s (server gratuit)
+După aceea răspunde instant!
+
+📱 Testează ACUM GRATUIT:
 👉 https://rolexai.vercel.app
 
-🔥 100% GRATUIT pentru primii 100 testeri!
+🎯 Caut primii 100 de testeri!
+Feedback = access prioritar la versiunea PRO
 
-#RoLexAI #LegalTech #Romania #AI
+#RoLexAI #LegalTech #Romania #AI #LegalAI
 ```
 
 ---
