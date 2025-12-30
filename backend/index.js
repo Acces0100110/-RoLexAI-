@@ -44,7 +44,39 @@ app.post('/api/chat', async (req, res) => {
   res.json({ reply });
 });
 
+// Endpoint pentru actualizare manuală legislație
+const { actualizareaManuala, incarcaLegislatie } = require('./utils/legislationScheduler');
+
+app.post('/api/update-legislation', async (req, res) => {
+  try {
+    console.log('🔄 Actualizare legislație declanșată manual...');
+    await actualizareaManuala();
+    res.json({ success: true, message: 'Legislația a fost actualizată cu succes!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Eroare la actualizarea legislației' });
+  }
+});
+
+app.get('/api/legislation-status', async (req, res) => {
+  try {
+    const legi = await incarcaLegislatie();
+    res.json({
+      total: legi.length,
+      lastUpdate: legi[0]?.dataActualizare || 'Niciodată',
+      coduri: legi.map(l => ({ nume: l.nume, articole: l.articole?.length || 0 }))
+    });
+  } catch (error) {
+    res.json({ total: 0, lastUpdate: 'Niciodată', coduri: [] });
+  }
+});
+
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Backend server running on port ${PORT}`);
+  
+  // Pornește scheduler pentru actualizare automată
+  const { startScheduler } = require('./utils/legislationScheduler');
+  startScheduler();
+  
+  console.log('✅ Legislation auto-update scheduler started!');
 });
