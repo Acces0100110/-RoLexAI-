@@ -82,7 +82,7 @@ git push -u origin main
    - Root Directory: `demo`
 6. Deploy
 
-**AȘTEAPTĂ 1-2 MIN** → **COPIAZĂ URL** (ex: `https://rolexai.vercel.app`)
+**AȘTEAPTĂ 1-2 MIN** → **COPIAZĂ URL** (ex: `https://ro-lex-ai.vercel.app`)
 
 ---
 
@@ -107,7 +107,7 @@ AI-ul care te ajută să înțelegi orice lege din România!
 După aceea răspunde instant!
 
 📱 Testează ACUM GRATUIT:
-👉 https://rolexai.vercel.app
+👉 https://ro-lex-ai.vercel.app
 
 🎯 Caut primii 100 de testeri!
 Feedback = access prioritar la versiunea PRO
@@ -121,7 +121,7 @@ Feedback = access prioritar la versiunea PRO
 
 App-ul tău e LIVE la:
 - Backend: `https://rolexai-backend.onrender.com`
-- Frontend: `https://rolexai.vercel.app`
+- Frontend: `https://ro-lex-ai.vercel.app`
 
 **Total timp: 10 minute**  
 **Total cost: 0 RON**
