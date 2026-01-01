@@ -1,9 +1,9 @@
 // utils/groq.js
-// Modul pentru integrarea cu Groq GPT
+// Modul pentru integrarea cu OpenRouter (fost Groq GPT)
 const axios = require('axios');
 
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
+const GROQ_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const GROQ_API_KEY = process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY;
 
 async function chatWithGroq(messages) {
   try {
@@ -36,22 +36,24 @@ Nu oferi informații juridice generale sau din alte țări. Focus 100% pe Român
     const response = await axios.post(
       GROQ_API_URL,
       {
-        model: 'llama-3.3-70b-versatile',
+        model: 'meta-llama/llama-3.1-70b-instruct',
         messages: messagesWithSystem,
-        temperature: 0.3, // Mai puțin creativ, mai precis
+        temperature: 0.3,
         max_tokens: 2000,
       },
       {
         headers: {
           'Authorization': `Bearer ${GROQ_API_KEY}`,
           'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://ro-lex-ai.vercel.app',
+          'X-Title': 'RoLexAI'
         },
       }
     );
     return response.data.choices[0].message.content;
   } catch (error) {
-    console.error('Groq GPT error:', error.response?.data || error.message);
-    return 'Eroare la comunicarea cu Groq GPT. Te rog verifică conexiunea și încearcă din nou.';
+    console.error('OpenRouter API error:', error.response?.data || error.message);
+    return 'Eroare la comunicarea cu AI. Te rog verifică conexiunea și încearcă din nou.';
   }
 }
 
