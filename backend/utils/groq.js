@@ -36,7 +36,7 @@ Nu oferi informații juridice generale sau din alte țări. Focus 100% pe Român
     const response = await axios.post(
       GROQ_API_URL,
       {
-        model: 'meta-llama/llama-3.1-70b-instruct',
+        model: 'meta-llama/llama-3-8b-instruct:free',
         messages: messagesWithSystem,
         temperature: 0.3,
         max_tokens: 2000,
