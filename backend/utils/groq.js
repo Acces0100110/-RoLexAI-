@@ -1,68 +1,90 @@
 // utils/groq.js
-// Modul pentru integrarea cu OpenRouter - modele gratuite
-const axios = require('axios');
+// Asistent juridic RoLexAI - Bază extinsă de cunoștințe pentru legislația română
 
-// OpenRouter oferă acces gratuit la mai multe modele
-const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const API_KEY = process.env.OPENROUTER_API_KEY || 'sk-or-v1-free'; // API key gratuit
+// Bază de cunoștințe COMPLETĂ despre legislația română
+const knowledgeBase = {
+  // Salutări și introducere
+  salut: {
+    keywords: ['salut', 'buna', 'bună', 'hey', 'hello', 'hi', 'servus', 'ce faci'],
+    response: '👋 **Bună! Sunt RoLexAI** - asistentul tău juridic virtual pentru **legislația românească**! 🇷🇴⚖️\n\n**📚 Pot să te ajut cu:**\n\n🔹 **OUG-uri** (Ordonanțe de Urgență)\n🔹 **Codul Penal** (infracțiuni, pedepse)\n🔹 **Codul Civil** (contracte, proprietate, moșteniri)\n🔹 **Codul Muncii** (drepturi angajați, concedieri)\n🔹 **Constituția României**\n🔹 **GDPR & protecția datelor**\n🔹 **Procedură civilă și penală**\n\n💬 **Exemple de întrebări:**\n• "Ce este o OUG?"\n• "Care este pedeapsa pentru furt?"\n• "Câte zile de concediu am dreptul?"\n• "Ce înseamnă prescripția în Codul Civil?"\n\n**Cum te pot ajuta?** 😊'
+  },
+
+  // OUG-uri
+  oug: {
+    keywords: ['oug', 'ordonanț', 'ordonanta', 'urgență', 'urgenta', 'guvern emite'],
+    response: '📜 **OUG (Ordonanță de Urgență a Guvernului)**\n\nEste un **act normativ** adoptat de Guvernul României în **situații extraordinare** care nu pot aștepta procedura legislativă normală.\n\n**📋 Baza legală:** Art. 115 din Constituția României\n\n**✅ Caracteristici:**\n• Intră în vigoare **IMEDIAT** după publicare în Monitorul Oficial\n• Trebuie aprobată de **Parlament** în max. 30 zile\n• Poate fi **modificată** sau **respinsă** de Parlament\n• Dacă e respinsă, încetează efectele (dar faptele în baza ei rămân valabile)\n\n**❌ NU poate reglementa:**\n• Legi constituționale\n• Drepturi electorale\n• Bugetul de stat\n• Grațieri sau amnistii\n\n**📊 Exemple celebre:**\n• **OUG 114/2018** - taxa pe active bancare (controversată)\n• **OUG 195/2002** - circulația rutieră (încă în vigoare)\n• **OUG 57/2019** - Codul administrativ\n• **OUG 158/2005** - concedii medicale\n\n🔍 **Toate OUG-urile:** legislatie.just.ro → Caută "OUG"'
+  },
+
+  // Cod Penal
+  cod_penal: {
+    keywords: ['penal', 'infracțiuni', 'infractiuni', 'pedeps', 'furt', 'omor', 'viol', 'tâlhărie', 'talharie', 'conduce', 'alcool', 'drogue', 'hot', 'crimă'],
+    response: '⚖️ **Codul Penal al României**\n**Legea nr. 286/2009** (în vigoare din 1 februarie 2014)\n\nReglementează **infracțiunile** și **pedepsele** în România.\n\n**📚 Structură:**\n🔹 **Partea Generală:** principii penale, răspundere, circumstanțe atenuante/agravante, participație\n🔹 **Partea Specială:** infracțiuni concrete cu pedepse\n\n**🔴 Infracțiuni frecvente:**\n\n**1️⃣ Contra patrimoniului:**\n• **Art. 228-229: FURT** → 6 luni - 20 ani închisoare\n  - Furt simplu: 6 luni - 3 ani\n  - Furt calificat (cu efracție, noapte): 1-12 ani\n• **Art. 233-236: TÂLHĂRIE** → 3-15 ani\n• **Art. 244: ÎNȘELĂCIUNE (FRAUDĂ)** → 6 luni - 12 ani\n\n**2️⃣ Contra vieții:**\n• **Art. 188-189: OMOR** → 10-25 ani SAU detenție pe viață\n  - Omor simplu: 10-20 ani\n  - Omor calificat: 15-25 ani / detenție pe viață\n• **Art. 178-179: OMOR CALIFICAT** → detenție pe viață\n\n**3️⃣ Contra integrității corporale:**\n• **Art. 193-194: LOVIRE/VĂTĂMARE** → 3 luni - 7 ani\n\n**4️⃣ Contra libertății sexuale:**\n• **Art. 218: VIOL** → 5-18 ani\n• **Art. 219: AGRESIUNE SEXUALĂ** → 3-14 ani\n\n**5️⃣ Contra siguranței circulației:**\n• **Art. 335: CONDUCERE SUB INFLUENȚA ALCOOLULUI**\n  - Peste 0,80 g/l alcool în sânge → 1-5 ani închisoare\n  - Sub 0,80 g/l → contravenție + suspendare permis\n\n**⏰ PRESCRIPȚIA (când se stinge răspunderea penală):**\n• Detenție pe viață: **30 ani**\n• Peste 20 ani închisoare: **20 ani**\n• 10-20 ani: **15 ani**\n• Sub 10 ani: **10 ani**\n• Sub 5 ani: **8 ani**\n\n📖 **Text complet:** legislatie.just.ro/Public/DetaliiDocument/109855'
+  },
+
+  // Cod Civil
+  cod_civil: {
+    keywords: ['civil', 'contract', 'proprietate', 'vânzare', 'vanzare', 'cumpărare', 'cumparare', 'închiriere', 'inchiriere', 'mostenire', 'moștenire', 'divort', 'divorț', 'căsătorie', 'casatorie'],
+    response: '📘 **Codul Civil al României**\n**Legea nr. 287/2009** (în vigoare din 1 octombrie 2011)\n\nReglementează **raporturile juridice civile** dintre persoane.\n\n**🏛️ Domenii principale:**\n\n**1️⃣ PERSOANE:**\n• Persoane fizice: naștere, majorat (18 ani), capacitate juridică\n• Persoane juridice: societăți, asociații, fundații\n• Domiciliul și reședința\n\n**2️⃣ FAMILIA:**\n• **Căsătoria:** condiții, efecte, regim matrimonial\n• **Divorțul:** prin acordul părților SAU prin hotărâre judecătorească\n• **Autoritate părintească:** responsabilități părinți\n• **Obligația de întreținere** între rude\n\n**3️⃣ SUCCESIUNI (MOȘTENIRI):**\n• **Moștenire legală:** ordinea moștenitorilor\n  - Ordinul 1: Copii + soț/soție\n  - Ordinul 2: Părinți + frați\n  - Ordinul 3: Bunici\n  - Ordinul 4: Străbunici și rude colaterale\n• **Moștenire testamentară:** prin testament\n• **Rezerva succesorală:** cota garantată copiilor (1/2 din parte)\n\n**4️⃣ BUNURI & PROPRIETATE:**\n• **Dreptul de proprietate:** ABSOLUT, EXCLUSIV, PERPETUU\n• **Uzucapiune (dobândire prin posesie):**\n  - Posesie de bună-credință: 10 ani\n  - Posesie de rea-credință: 30 ani\n• **Servituți:** drepturi asupra proprietății altuia\n\n**5️⃣ OBLIGAȚII & CONTRACTE:**\n\n**📋 Contracte importante:**\n• **VÂNZARE-CUMPĂRARE** (art. 1650-1766)\n  - Contract consensual (se formează prin acord)\n  - Pentru imobile: OBLIGATORIU act autentic (notar)\n• **LOCAȚIUNE (ÎNCHIRIERE)** (art. 1777-1850)\n  - Contract prin care proprietarul dă în folosință un bun\n• **DONAȚIE** (art. 985-1026)\n  - Transfer gratuit de bunuri\n  - Pentru imobile: act autentic\n• **ÎMPRUMUT** (art. 2146-2176)\n  - De consumație (bani) sau de folosință (bunuri)\n\n**⏰ PRESCRIPȚIA (termenul în care poți face reclamații):**\n• **Prescripție generală:** **3 ANI** (art. 2517)\n  - Se aplică la majoritatea obligațiilor\n• **Prescripție specială:**\n  - Daune din contracte: 3 ani\n  - Daune din delicte: 3 ani de la cunoaștere\n  - Dreptul de proprietate: IMPRESCRIPTIBIL (nu se pierde)\n\n**💰 DOBÂNDA LEGALĂ:**\n• Dobânda legală pentru întârzieri: stabilită prin OG\n• Dobânda contractuală: stabilită de părți (în limite legale)\n\n📖 **Text integral:** legislatie.just.ro/Public/DetaliiDocument/109975'
+  },
+
+  // Cod Muncii
+  cod_muncii: {
+    keywords: ['munca', 'munci', 'angajat', 'angajator', 'concedier', 'concediu', 'salariu', 'contract de munca', 'demisie', 'preaviz', 'ore suplimentare'],
+    response: '👔 **Codul Muncii**\n**Legea nr. 53/2003** (actualizat periodic)\n\nReglementează **raporturile de muncă** dintre angajați și angajatori.\n\n**📋 DREPTURILE ANGAJATULUI:**\n\n**1️⃣ CONCEDIU DE ODIHNĂ:**\n• **Minimum: 20 zile lucrătoare/an** (nu se pot reduce!)\n• Poate fi mai mare prin contract/CCM\n• Se acordă proporțional cu timpul lucrat\n• Se plătește cu **minim 5 zile înainte** de plecare în concediu\n\n**2️⃣ CONCEDIU MEDICAL:**\n• Plătit **75%** din salariul mediu brut (primele 5 zile de angajator, restul de CASS)\n• **100%** pentru: boli profesionale, accidente de muncă, TBC, HIV, tumori\n• Se acordă pe bază de certificat medical (emis de medic)\n\n**3️⃣ SALARIUL:**\n• **Salariul minim brut:** actualizat anual prin HG (verifică pe gov.ro)\n  - 2025: **3.700 lei brut/lună** (în construcții: 4.000 lei)\n• Se plătește **lunar**, până la data stabilită în contract\n• **Salariul net** = brut - impozit (10%) - CAS (25%) - CASS (10%)\n\n**4️⃣ PROGRAM DE LUCRU:**\n• **Normă completă:** max. **8 ore/zi**, **40 ore/săptămână**\n• **Ore suplimentare:**\n  - Spor: +75% (zi), +100% (noapte/weekend/sărbători)\n  - Max. 48 ore/săptămână (inclusiv ore suplimentare)\n  - Max. 360 ore suplimentare/an\n\n**⏱️ PERIOADA DE PROBĂ:**\n• **Funcții de execuție:** max. **90 zile**\n• **Funcții de conducere:** max. **120 zile**\n• **Persoane cu dizabilități:** max. **30 zile**\n• **Debutanți:** max. **30 zile**\n• În perioada de probă: **nu e nevoie de preaviz** pentru demisie/concediere\n\n**🚪 ÎNCETAREA CONTRACTULUI DE MUNCĂ:**\n\n**A) DEMISIA (angajatul renunță):**\n• **Preaviz: 20 zile lucrătoare**\n• Se face **în scris**\n• Angajatul poate renunța la preaviz (dar pierde dreptul la compensații)\n\n**B) CONCEDIERE (angajatorul încetează contractul):**\n\n**1. Concediere cu preaviz (din motive obiective):**\n• **Preaviz: 20 zile lucrătoare**\n• Motive: reorganizare, reducere personal, inaptitudine\n• **Compensații:**\n  - Minimum **6 salarii** de bază (pentru vechime peste 20 ani: 12 salarii)\n  - Se calculează pentru fiecare an lucrat\n\n**2. Concediere disciplinară (FĂRĂ preaviz):**\n• Pentru **abateri grave:**\n  - Absenteism (3 absențe nemotivate în 30 zile)\n  - Furt, fraudă\n  - Nerespectarea regulamentului intern\n  - Stare de ebrietate la serviciu\n• **NU se acordă compensații**\n• Trebuie **cercetare prealabilă** (angajatul poate da explicații)\n\n**3. Concediere colectivă:**\n• Când se concediază **minimum 10 angajați**\n• Angajatorul trebuie să notifice **AJOFM** și **sindicatul**\n• **Criterii de selecție:** performanță, sarcini de familie, vechime\n\n**⚠️ CONCEDIERE ABUZIVĂ:**\n\nDacă consideri că ai fost **concediat ilegal**, poți:**\n\n✅ **Contesta în instanță** în termen de **30 zile** de la comunicare\n✅ **Solicita:**\n  - **Reintegrare** pe post SAU\n  - **Despăgubiri:** minimum **6 luni salariu** (uneori mai mult)\n✅ **Suspendare executare:** poți cere instanței să suspende concedierea până la soluționare\n\n**🏥 ALTE DREPTURI:**\n• **Concediu de maternitate:** 126 zile (plătit de CASS)\n• **Concediu creștere copil:** până la 2 ani (3 ani pentru copil cu dizabilități)\n• **Zile libere plătite:**\n  - Căsătorie: 5 zile\n  - Deces rudă apropiată: 3 zile\n  - Donare de sânge: 1 zi\n\n📖 **Surse:**\n• legislatie.just.ro\n• mmuncii.ro (Ministerul Muncii)\n• inspectiamuncii.ro (ITM - pentru reclamații)'
+  },
+
+  // Constituția României
+  constitutie: {
+    keywords: ['constituție', 'constitutie', 'constituțional', 'constitutional', 'ccr', 'curtea constituțional', 'fundamental'],
+    response: '🇷🇴 **Constituția României**\n**Adoptată:** 8 decembrie 1991 (referendum)\n**Revizuită:** 18-19 octombrie 2003 (referendum)\n\n**📜 Este LEGEA FUNDAMENTALĂ a statului român** - toate celelalte legi trebuie să fie conforme cu ea.\n\n**⚖️ PRINCIPII FUNDAMENTALE:**\n\n**Art. 1:** România este **stat național, suveran și independent, unitar și indivizibil**\n• Formă de guvernământ: **REPUBLICĂ**\n• Stat de drept, democratic și social\n\n**Art. 16:** **Egalitate în drepturi** - toți cetățenii sunt egali în fața legii\n\n**Art. 21:** **Acces liber la justiție** - orice persoană se poate adresa justiției\n\n**Art. 44:** **Dreptul de proprietate privată** este garantat și protejat\n\n**🏛️ SEPARAȚIA PUTERILOR (Art. 1):**\n\n**1️⃣ PUTEREA LEGISLATIVĂ** (face legile):\n• **Parlamentul** (Camera Deputaților + Senatul)\n• Aleși prin vot universal pentru **4 ani**\n\n**2️⃣ PUTEREA EXECUTIVĂ** (aplică legile):\n• **Președintele României** (ales pentru 5 ani, max. 2 mandate)\n• **Guvernul** (Prim-ministru + miniștri)\n\n**3️⃣ PUTEREA JUDECĂTOREASCĂ** (aplică justiția):\n• **Instanțele judecătorești** (independente)\n• **Ministerul Public** (procurori)\n• **Curtea Constituțională** (verifică constituționalitatea legilor)\n\n**🛡️ DREPTURI ȘI LIBERTĂȚI FUNDAMENTALE:**\n\n**Art. 22:** Dreptul la viață și integritate fizică\n**Art. 23:** Libertatea individuală (nimeni nu poate fi arestat fără mandat)\n**Art. 26:** Viața intimă, familială și privată\n**Art. 29:** Libertatea de conștiință (religie)\n**Art. 30:** Libertatea de exprimare\n**Art. 40:** Dreptul de asociere\n**Art. 41:** Dreptul la muncă și protecția muncii\n**Art. 53:** **Restrângerea exercițiului unor drepturi** - posibilă doar prin lege, pentru:\n  - Securitate națională\n  - Ordine publică\n  - Sănătate sau moralitate publică\n  - Drepturile victimelor\n\n**📋 ACTE NORMATIVE (Art. 115):**\n\n• **Legi** - adoptate de Parlament\n• **OUG (Ordonanțe de Urgență)** - emise de Guvern în situații extraordinare\n• **OG (Ordonanțe simple)** - în baza unei legi de abilitare\n• **Hotărâri de Guvern (HG)**\n\n**🏛️ CURTEA CONSTITUȚIONALĂ (CCR):**\n\n**Rol:** Verifică dacă legile sunt **conforme cu Constituția**\n**Componență:** 9 judecători (mandate de 9 ani, nerenovabile)\n**Atribuții:**\n• Controlează constituționalitatea legilor\n• Soluționează conflicte juridice între autorități\n• Validează referendumurile\n• Verifică condițiile de alegere a Președintelui\n\n**Deciziile CCR sunt OBLIGATORII** și se aplică tuturor!\n\n**♻️ REVIZUIREA CONSTITUȚIEI (Art. 150):**\n\nConstituția poate fi **modificată** prin:\n1. **Inițiativa:** Președinte, 1/4 din parlamentari, min. 500.000 cetățeni\n2. **Adoptare:** 2/3 din parlamentari (sau 3/4 pentru titlurile I-III)\n3. **Referendum:** aprobat de majoritate în referendum\n\n**❌ NU pot fi revizuite:**\n• Caracterul național, independent, unitar și indivizibil al statului\n• Forma de guvernământ (republică)\n• Integritatea teritoriului\n• Independența justiției\n• Drepturile și libertățile fundamentale\n\n📖 **Citește Constituția:** cdep.ro/pls/dic/site.page?id=339'
+  },
+
+  // GDPR și protecția datelor
+  gdpr: {
+    keywords: ['gdpr', 'date personale', 'protecție date', 'protectie date', 'anspdcp', 'rgpd', 'privacy', 'confidențial'],
+    response: '🔒 **GDPR & Protecția Datelor Personale**\n\n**📜 Legislație:**\n• **Regulamentul UE 2016/679 (GDPR)** - aplicabil direct în România\n• **Legea 190/2018** - implementarea GDPR în România\n\n**❓ Ce sunt datele personale?**\nOrice informație despre o persoană identificabilă:\n• Nume, prenume, CNP\n• Adresă, telefon, email\n• IP, cookies, localizare GPS\n• Imagini, înregistrări video/audio\n• Date biometrice (amprentă, recunoaștere facială)\n\n**✅ DREPTURILE TALE:**\n\n**1. Dreptul de ACCES:**\n• Poți cere ce date are o companie despre tine\n• Răspuns obligatoriu în **30 zile**\n\n**2. Dreptul de RECTIFICARE:**\n• Poți cere corectarea datelor greșite\n\n**3. Dreptul la ȘTERGERE ("Dreptul de a fi uitat"):**\n• Poți cere ștergerea datelor tale dacă:\n  - Nu mai sunt necesare\n  - Îți retragi consimțământul\n  - Datele au fost prelucrate ilegal\n\n**4. Dreptul la PORTABILITATE:**\n• Poți cere datele în format electronic (pentru a le muta la alt serviciu)\n\n**5. Dreptul de OPOZIȚIE:**\n• Te poți opune prelucrării pentru marketing direct\n\n**6. Dreptul la RESTRICȚIONARE:**\n• Poți cere "înghețarea" datelor (nu ștergere, dar nu prelucrare)\n\n**⚠️ OBLIGAȚIILE COMPANIILOR:**\n\n• **Consimțământ explicit** pentru prelucrarea datelor\n• **Securitate** - măsuri tehnice și organizatorice\n• **Notificare breach:** în 72 ore dacă sunt furate date\n• **DPO (Data Protection Officer):** obligatoriu pentru instituții publice și companii mari\n\n**💰 SANCȚIUNI (AMENZI URIAȘE!):**\n\n• Până la **20 milioane EUR** SAU\n• **4% din cifra de afaceri anuală globală** (se aplică suma mai mare)\n\n**Exemple de amenzi GDPR:**\n• Amazon: 746 milioane EUR\n• Google: 90 milioane EUR\n• Facebook: 265 milioane EUR\n\n**🏛️ AUTORITATEA DE SUPRAVEGHERE:**\n\n**ANSPDCP** (Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal)\n\n📞 **Contact:**\n• Website: **dataprotection.ro**\n• Email: anspdcp@dataprotection.ro\n• Telefon: 031.805.9211\n• Adresă: B-dul G-ral. Gheorghe Magheru 28-30, București\n\n**📝 CUM DEPUI PLÂNGERE:**\n\n1. **Online:** pe dataprotection.ro (formular)\n2. **Email/poștă:** descrie încălcarea\n3. **Personal:** la sediul ANSPDCP\n\n**Termen:** În termen de **1 an** de la încălcare\n\n**💡 SFATURI:**\n• Citește **politica de confidențialitate** înainte să dai datele\n• **Nu accepta** automat cookies - configurează-le\n• Verifică ce **permisiuni** ceri aplicațiile mobile\n• Folosește **email-uri temporare** pentru înregistrări\n\n📖 **Mai multe:** dataprotection.ro | eugdpr.org'
+  },
+
+  // Procedură civilă și penală
+  procedura: {
+    keywords: ['procedur', 'proces', 'tribunal', 'instanță', 'instanta', 'judecător', 'judecator', 'avocat', 'judecată'],
+    response: '⚖️ **Codurile de Procedură**\n\n**📘 CODUL DE PROCEDURĂ CIVILĂ (CPC)**\nLegea 134/2010 - reglementează **procesele civile**\n\n**Tipuri de procese civile:**\n• Divorțuri\n• Litigii contractuale (vânzare, închiriere)\n• Moșteniri\n• Daune materiale/morale\n• Litigii de muncă\n\n**⏰ Termene importante:**\n• **Apel:** **30 zile** de la comunicarea hotărârii\n• **Recurs:** **30 zile** de la comunicarea hotărârii de apel\n• **Contestație în anulare:** **15 zile**\n\n**💰 Taxe judiciare:**\n• Variază în funcție de valoarea obiectului (ex: 3% din sumă pentru litigii < 500.000 lei)\n• Divorț prin acordul părților: ~200 lei\n• Divorț contencio: depinde de pretențiile accesorii\n\n**📜 CODUL DE PROCEDURĂ PENALĂ (CPP)**\nLegea 135/2010 - reglementează **procesele penale**\n\n**Faze:**\n1. **Urmărire penală** (făcută de Poliție/Parchet)\n2. **Trimitere în judecată** (de către Procuror)\n3. **Judecată** (la instanță)\n4. **Executare** (pedeapsa)\n\n**⏰ Termene:**\n• **Apel:** **10 zile** de la pronunțare\n• **Recurs:** **10 zile** de la pronunțare\n• **Reținere:** max. **24 ore** (fără mandat)\n• **Arest preventiv:** max. **30 zile** (poate fi prelungit)\n\n**🏛️ INSTANȚELE DIN ROMÂNIA:**\n\n**1️⃣ JUDECĂTORII** (prim nivel):\n• Procese civile simple (< 200.000 lei)\n• Contravenții\n• Divorțuri\n\n**2️⃣ TRIBUNALE:**\n• Apel față de judecătorii\n• Procese civile mari (> 200.000 lei)\n• Procese penale grave (peste 7 ani închisoare)\n\n**3️⃣ CURȚI DE APEL:**\n• Apel față de tribunale\n• Recurs față de judecătorii\n\n**4️⃣ ÎNALTA CURTE DE CASAȚIE ȘI JUSTIȚIE (ICCJ):**\n• Ultimă instanță\n• Recurs în casație\n• Dezlegarea de chestiuni de drept\n\n**👨‍⚖️ AI NEVOIE DE AVOCAT?**\n\n**Obligatoriu:**\n• Procese penale (infracțiuni cu închisoare > 7 ani)\n• Minori\n• Persoane cu dizabilități\n• Recurs/apel în unele cazuri\n\n**Recomandat:**\n• Litigii complexe (moșteniri, proprietate)\n• Sume mari în joc\n• Divorțuri conflictuale\n\n**Asistență juridică gratuită:**\n• Pentru persoane cu venituri mici\n• Cerere la Baroul de Avocați\n\n📖 **Surse:**\n• portal.just.ro (Portalul instanțelor)\n• just.ro (Ministerul Justiției)'
+  },
+
+  // Ajutor general
+  ajutor: {
+    keywords: ['ajutor', 'help', 'ce poți', 'ce poti', 'cum funcționez', 'cum functionez'],
+    response: '💡 **Cum funcționează RoLexAI?**\n\nSunt un **asistent juridic virtual** specializat în **legislația românească**.\n\n**📚 Domenii în care te pot ajuta:**\n\n✅ **OUG-uri** (Ordonanțe de Urgență)\n✅ **Codul Penal** (infracțiuni, pedepse, prescripție)\n✅ **Codul Civil** (contracte, proprietate, moșteniri, divorțuri)\n✅ **Codul Muncii** (drepturi angajați, concedii, concedieri)\n✅ **Constituția României** (drepturi fundamentale, structura statului)\n✅ **GDPR** (protecția datelor personale)\n✅ **Procedură civilă și penală** (cum funcționează procesele)\n\n**💬 Exemple de întrebări:**\n• "Ce este o OUG?"\n• "Care este pedeapsa pentru furt?"\n• "Câte zile de concediu am dreptul?"\n• "Ce înseamnă prescripția în dreptul civil?"\n• "Cum pot contesta o concediere?"\n• "Ce drepturi am conform GDPR?"\n\n**⚠️ IMPORTANT:**\nRăspunsurile mele sunt **informative**. Pentru cazuri concrete și consiliere juridică personalizată, **consultă un avocat**.\n\n📖 **Surse oficiale:**\n• legislatie.just.ro\n• lege5.ro\n• monitoruloficial.ro'
+  }
+};
 
 async function chatWithGroq(messages) {
   try {
-    console.log('🤖 Sending to OpenRouter...');
+    const userMsg = messages[messages.length - 1]?.content || '';
+    const msgLower = userMsg.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Normalizează diacritice
     
-    // System prompt pentru legislație română
-    const systemPrompt = {
-      role: 'system',
-      content: 'Ești RoLexAI, un asistent juridic specializat în legislația din România. Răspunde clar și profesional despre legi românești, OUG-uri, coduri și acte normative. Citează articole când este posibil.'
-    };
-
-    // Construiește mesajele
-    const chatMessages = [systemPrompt, ...messages];
-
-    const response = await axios.post(
-      API_URL,
-      {
-        model: 'google/gemini-flash-1.5', // Model gratuit și rapid de la Google
-        messages: chatMessages,
-        temperature: 0.5,
-        max_tokens: 800,
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${API_KEY}`,
-          'HTTP-Referer': 'https://ro-lex-ai.vercel.app',
-          'X-Title': 'RoLexAI',
-          'Content-Type': 'application/json',
-        },
-        timeout: 30000,
+    console.log('🤖 Întrebare utilizator:', userMsg.substring(0, 80));
+    
+    // Caută în baza de cunoștințe
+    for (const [key, data] of Object.entries(knowledgeBase)) {
+      const found = data.keywords.some(keyword => {
+        const normalizedKeyword = keyword.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return msgLower.includes(normalizedKeyword);
+      });
+      
+      if (found) {
+        console.log('✅ Răspuns găsit în secțiunea:', key);
+        return data.response;
       }
-    );
-
-    console.log('✅ Response from OpenRouter');
-    
-    const reply = response.data?.choices?.[0]?.message?.content;
-    
-    if (reply) {
-      return reply.trim();
-    } else {
-      throw new Error('No response content');
     }
+    
+    // Dacă nu găsește nimic specific, returnează ajutor general
+    console.log('ℹ️ Nu am găsit răspuns specific, returnez ajutor general');
+    return `📚 **Nu am găsit informații specifice despre "${userMsg}"**\n\nDar îți pot răspunde la întrebări despre:\n\n🔹 **OUG-uri** - "Ce este o OUG?"\n🔹 **Codul Penal** - "Care e pedeapsa pentru furt?"\n🔹 **Codul Civil** - "Ce înseamnă uzucapiunea?"\n🔹 **Codul Muncii** - "Câte zile de concediu am?"\n🔹 **Constituția** - "Ce drepturi am conform Constituției?"\n🔹 **GDPR** - "Ce drepturi am privind datele personale?"\n🔹 **Procedură** - "Cum depun o plângere la tribunal?"\n\n💡 **Reformulează întrebarea** sau alege un subiect de mai sus!\n\n📖 **Pentru legislație completă:** legislatie.just.ro`;
 
   } catch (error) {
-    console.error('❌ OpenRouter error:', error.response?.data || error.message);
-    
-    // Fallback simplu
-    const userMsg = messages[messages.length - 1]?.content || '';
-    
-    if (userMsg.toLowerCase().includes('oug')) {
-      return 'O OUG (Ordonanță de Urgență a Guvernului) este un act normativ adoptat de Guvernul României în situații extraordinare, conform Art. 115 din Constituția României. OUG-urile intră în vigoare imediat dar trebuie aprobate ulterior de Parlament.';
-    }
-    
-    if (userMsg.toLowerCase().includes('cod penal')) {
-      return 'Codul Penal al României (Legea nr. 286/2009) reglementează infracțiunile și pedepsele în România. Poți consulta textul integral pe legislatie.just.ro.';
-    }
-    
-    return 'Bună! Sunt RoLexAI. Te pot ajuta cu întrebări despre legislația românească - OUG-uri, Codul Penal, Codul Civil, Codul Muncii și alte acte normative din România. Întreabă-mă orice!';
+    console.error('❌ Eroare:', error.message);
+    return '⚠️ A apărut o eroare tehnică. Te rog să încerci din nou sau reformulează întrebarea.';
   }
 }
 
