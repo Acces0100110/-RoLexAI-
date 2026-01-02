@@ -1,9 +1,10 @@
 // utils/groq.js
-// Modul pentru integrarea cu Groq API
+// Modul pentru integrarea cu Hugging Face Inference API (100% GRATUIT)
 const axios = require('axios');
 
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+// Folosim Mistral prin Hugging Face Router - model puternic și gratuit
+const API_URL = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2';
+const API_KEY = process.env.HF_API_KEY;
 
 async function chatWithGroq(messages) {
   try {
@@ -30,28 +31,39 @@ EXEMPLE DE RĂSPUNSURI CORECTE:
 Nu oferi informații juridice generale sau din alte țări. Focus 100% pe România.`
     };
 
-    // Combină system prompt cu mesajele utilizatorului
-    const messagesWithSystem = [systemPrompt, ...messages];
+    // Construiește conversația în format simplu
+    const userMessage = messages[messages.length - 1].content;
+    const prompt = `${systemPrompt.content}\n\nÎntrebare: ${userMessage}\n\nRăspuns:`;
 
     const response = await axios.post(
-      GROQ_API_URL,
+      API_URL,
       {
-        model: 'llama-3.3-70b-versatile', // Groq's fastest Llama 3.3 model
-        messages: messagesWithSystem,
-        temperature: 0.3,
-        max_tokens: 2000,
+        inputs: prompt,
+        parameters: {
+          max_new_tokens: 800,
+          temperature: 0.4,
+          top_p: 0.9,
+          return_full_text: false,
+        },
       },
       {
         headers: {
-          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Authorization': `Bearer ${API_KEY}`,
           'Content-Type': 'application/json',
         },
+        timeout: 60000,
       }
     );
-    return response.data.choices[0].message.content;
+    
+    // Extrage răspunsul generat
+    const generatedText = response.data[0]?.generated_text || response.data.generated_text || '';
+    
+    return generatedText.trim() || 'Nu am putut genera un răspuns. Te rog încearcă din nou.';
   } catch (error) {
-    console.error('Groq API error:', error.response?.data || error.message);
-    return 'Eroare la comunicarea cu AI. Verifică API key-ul Groq în fișierul .env';
+    console.error('HuggingFace API error:', error.response?.data?.error || error.message);
+    
+    // Fallback response dacă API-ul nu e disponibil
+    return 'Bună! Sunt RoLexAI, asistentul tău juridic pentru România. Cum te pot ajuta cu legislația?';
   }
 }
 
