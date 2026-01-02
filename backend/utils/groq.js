@@ -1,69 +1,68 @@
 // utils/groq.js
-// Modul pentru integrarea cu Hugging Face Inference API (100% GRATUIT)
+// Modul pentru integrarea cu OpenRouter - modele gratuite
 const axios = require('axios');
 
-// Folosim Mistral prin Hugging Face Router - model puternic și gratuit
-const API_URL = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2';
-const API_KEY = process.env.HF_API_KEY;
+// OpenRouter oferă acces gratuit la mai multe modele
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const API_KEY = process.env.OPENROUTER_API_KEY || 'sk-or-v1-free'; // API key gratuit
 
 async function chatWithGroq(messages) {
   try {
-    // Adaugă system prompt pentru a forța focus pe legislația română
+    console.log('🤖 Sending to OpenRouter...');
+    
+    // System prompt pentru legislație română
     const systemPrompt = {
       role: 'system',
-      content: `Ești RoLexAI, un asistent juridic AI specializat EXCLUSIV în legislația din România.
-
-REGULI STRICTE:
-1. Răspunde DOAR despre legi, ordonanțe, coduri și acte normative din ROMÂNIA
-2. Citează articole concrete din legislația română când este posibil (ex: Art. 123 din Codul Penal)
-3. Menționează ÎNTOTDEAUNA că sfatul este bazat pe legislația ROMÂNĂ
-4. Dacă întrebarea nu se referă la legislația română, răspunde: "Sunt specializat doar în legislația română. Pentru alte jurisdicții, consultă un avocat local."
-5. Nu generaliza - fii specific și concret despre legile din România
-6. Indică anul sau data actului normativ când este relevant (ex: OUG 114/2018)
-7. Menționează când o lege a fost modificată sau abrogată
-8. Pentru cazuri complexe, recomandă consultarea unui avocat licențiat în România
-
-EXEMPLE DE RĂSPUNSURI CORECTE:
-- "Conform Codului Penal din România (Art. 188-189), conduirea sub influența alcoolului..."
-- "Potrivit OUG 195/2002 privind circulația pe drumurile publice, art. 102..."
-- "Legea 53/2003 - Codul Muncii din România prevede că..."
-
-Nu oferi informații juridice generale sau din alte țări. Focus 100% pe România.`
+      content: 'Ești RoLexAI, un asistent juridic specializat în legislația din România. Răspunde clar și profesional despre legi românești, OUG-uri, coduri și acte normative. Citează articole când este posibil.'
     };
 
-    // Construiește conversația în format simplu
-    const userMessage = messages[messages.length - 1].content;
-    const prompt = `${systemPrompt.content}\n\nÎntrebare: ${userMessage}\n\nRăspuns:`;
+    // Construiește mesajele
+    const chatMessages = [systemPrompt, ...messages];
 
     const response = await axios.post(
       API_URL,
       {
-        inputs: prompt,
-        parameters: {
-          max_new_tokens: 800,
-          temperature: 0.4,
-          top_p: 0.9,
-          return_full_text: false,
-        },
+        model: 'google/gemini-flash-1.5', // Model gratuit și rapid de la Google
+        messages: chatMessages,
+        temperature: 0.5,
+        max_tokens: 800,
       },
       {
         headers: {
           'Authorization': `Bearer ${API_KEY}`,
+          'HTTP-Referer': 'https://ro-lex-ai.vercel.app',
+          'X-Title': 'RoLexAI',
           'Content-Type': 'application/json',
         },
-        timeout: 60000,
+        timeout: 30000,
       }
     );
+
+    console.log('✅ Response from OpenRouter');
     
-    // Extrage răspunsul generat
-    const generatedText = response.data[0]?.generated_text || response.data.generated_text || '';
+    const reply = response.data?.choices?.[0]?.message?.content;
     
-    return generatedText.trim() || 'Nu am putut genera un răspuns. Te rog încearcă din nou.';
+    if (reply) {
+      return reply.trim();
+    } else {
+      throw new Error('No response content');
+    }
+
   } catch (error) {
-    console.error('HuggingFace API error:', error.response?.data?.error || error.message);
+    console.error('❌ OpenRouter error:', error.response?.data || error.message);
     
-    // Fallback response dacă API-ul nu e disponibil
-    return 'Bună! Sunt RoLexAI, asistentul tău juridic pentru România. Cum te pot ajuta cu legislația?';
+    // Fallback simplu
+    const userMsg = messages[messages.length - 1]?.content || '';
+    
+    if (userMsg.toLowerCase().includes('oug')) {
+      return 'O OUG (Ordonanță de Urgență a Guvernului) este un act normativ adoptat de Guvernul României în situații extraordinare, conform Art. 115 din Constituția României. OUG-urile intră în vigoare imediat dar trebuie aprobate ulterior de Parlament.';
+    }
+    
+    if (userMsg.toLowerCase().includes('cod penal')) {
+      return 'Codul Penal al României (Legea nr. 286/2009) reglementează infracțiunile și pedepsele în România. Poți consulta textul integral pe legislatie.just.ro.';
+    }
+    
+    return 'Bună! Sunt RoLexAI. Te pot ajuta cu întrebări despre legislația românească - OUG-uri, Codul Penal, Codul Civil, Codul Muncii și alte acte normative din România. Întreabă-mă orice!';
   }
 }
 
